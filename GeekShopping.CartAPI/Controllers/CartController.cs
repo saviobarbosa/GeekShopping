@@ -1,4 +1,5 @@
 ﻿using GeekShopping.CartAPI.Data.ValueObjects;
+using GeekShopping.CartAPI.Messages;
 using GeekShopping.CartAPI.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +31,6 @@ namespace GeekShopping.CartAPI.Controllers
         }
 
         [HttpPost("add-cart")]
-        [Authorize]
         public async Task<ActionResult<IEnumerable<CartVO>>> AddCart(CartVO vo)
         {
             var cart = await _repository.SaveOrUpdateCart(vo);
@@ -40,7 +40,6 @@ namespace GeekShopping.CartAPI.Controllers
         }
 
         [HttpPut("update-cart")]
-        [Authorize]
         public async Task<ActionResult<IEnumerable<CartVO>>> UpdateCart(CartVO vo)
         {
             var cart = await _repository.SaveOrUpdateCart(vo);
@@ -50,13 +49,45 @@ namespace GeekShopping.CartAPI.Controllers
         }
 
         [HttpDelete("remove-cart/{id}")]
-        [Authorize]
         public async Task<ActionResult<IEnumerable<CartVO>>> RemoveCart(int id)
         {
             var status = await _repository.RemoveFromCart(id);
             if (!status) return NotFound();
 
             return Ok(status);
+        }
+
+        [HttpPost("apply-coupon")]
+        public async Task<ActionResult<IEnumerable<CartVO>>> ApplyCoupon(CartVO vo)
+        {
+            var status = await _repository.ApplyCoupom(vo.CartHeader.UserId, vo.CartHeader.CouponCode);
+            if (!status) return NotFound();
+
+            return Ok(status);
+        }
+
+        [HttpDelete("remove-coupon/{userId}")]
+        public async Task<ActionResult<IEnumerable<CartVO>>> RemoveCoupon(string userId)
+        {
+            var status = await _repository.RemoveCoupom(userId);
+            if (!status) return NotFound();
+
+            return Ok(status);
+        }
+
+        [HttpPost("checkout")]
+        public async Task<ActionResult<CheckoutHeaderVO>> Checkout(CheckoutHeaderVO vo)
+        {
+            if (vo?.UserId == null) return BadRequest();
+            var cart = await _repository.FindCartByUserId(vo.UserId);
+            if (cart == null) return NotFound();
+
+            vo.CartDetails = cart.CartDetails;
+            vo.DateTime = DateTime.Now;
+
+            //TASK RabbitMQ logic comes here!!
+
+            return Ok(vo);
         }
     }
 }
