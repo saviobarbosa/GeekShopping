@@ -61,7 +61,7 @@ namespace GeekShopping.CartAPI.Repository
             return _mapper.Map<CartVO>(cart);
         }
 
-        public async Task<bool> RemoveCoupom(string userId)
+        public Task<bool> RemoveCoupom(string userId)
         {
             throw new NotImplementedException();
         }
