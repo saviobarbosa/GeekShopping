@@ -1,4 +1,4 @@
-﻿using GeeekShopping.MessageBus;
+﻿using GeekShopping.MessageBus;
 using GeekShopping.CartAPI.Data.ValueObjects;
 using System;
 using System.Collections.Generic;

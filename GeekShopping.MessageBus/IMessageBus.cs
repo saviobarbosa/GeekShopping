@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace GeeekShopping.MessageBus
+namespace GeekShopping.MessageBus
 {
     public interface IMessageBus
     {

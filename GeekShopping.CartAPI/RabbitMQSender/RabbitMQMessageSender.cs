@@ -1,4 +1,4 @@
-﻿using GeeekShopping.MessageBus;
+﻿using GeekShopping.MessageBus;
 using GeekShopping.CartAPI.Messages;
 using RabbitMQ.Client;
 using System.Text;

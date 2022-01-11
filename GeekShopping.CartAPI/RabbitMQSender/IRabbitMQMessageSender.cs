@@ -1,4 +1,4 @@
-﻿using GeeekShopping.MessageBus;
+﻿using GeekShopping.MessageBus;
 
 namespace GeekShopping.CartAPI.RabbitMQSender
 {
