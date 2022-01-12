@@ -35,7 +35,7 @@ namespace GeekShopping.CartAPI.Repository
             return false;
         }
 
-        public async Task<bool> ClearCart(string userId)
+        public async Task<bool> RemoveCoupom(string userId)
         {
             var cartHeader = await _context.CartHeaders.FirstOrDefaultAsync(c => c.UserId == userId);
 
@@ -43,6 +43,21 @@ namespace GeekShopping.CartAPI.Repository
             {
                 cartHeader.CouponCode = "";
                 _context.CartHeaders.Update(cartHeader);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<bool> ClearCart(string userId)
+        {
+            var cartHeader = await _context.CartHeaders.FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cartHeader != null)
+            {
+                _context.CartDetails.RemoveRange(
+                    _context.CartDetails.Where(c => c.CartHeaderId == cartHeader.Id));
                 await _context.SaveChangesAsync();
                 return true;
             }
@@ -59,11 +74,6 @@ namespace GeekShopping.CartAPI.Repository
 
             cart.CartDetails = _context.CartDetails.Where(c => c.CartHeaderId == cart.CartHeader.Id).Include(c => c.Product);
             return _mapper.Map<CartVO>(cart);
-        }
-
-        public Task<bool> RemoveCoupom(string userId)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<bool> RemoveFromCart(long cartDetailsId)
