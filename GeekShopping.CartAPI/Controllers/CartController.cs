@@ -27,7 +27,7 @@ namespace GeekShopping.CartAPI.Controllers
 
         [HttpGet("find-cart/{id}")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<CartVO>>> FindById(string id)
+        public async Task<ActionResult<CartVO>> FindById(string id)
         {
             var cart = await _cartRepository.FindCartByUserId(id);
             if (cart == null) return NotFound();
@@ -36,7 +36,7 @@ namespace GeekShopping.CartAPI.Controllers
         }
 
         [HttpPost("add-cart")]
-        public async Task<ActionResult<IEnumerable<CartVO>>> AddCart(CartVO vo)
+        public async Task<ActionResult<CartVO>> AddCart(CartVO vo)
         {
             var cart = await _cartRepository.SaveOrUpdateCart(vo);
             if (cart == null) return NotFound();
@@ -45,7 +45,7 @@ namespace GeekShopping.CartAPI.Controllers
         }
 
         [HttpPut("update-cart")]
-        public async Task<ActionResult<IEnumerable<CartVO>>> UpdateCart(CartVO vo)
+        public async Task<ActionResult<CartVO>> UpdateCart(CartVO vo)
         {
             var cart = await _cartRepository.SaveOrUpdateCart(vo);
             if (cart == null) return NotFound();
@@ -54,7 +54,7 @@ namespace GeekShopping.CartAPI.Controllers
         }
 
         [HttpDelete("remove-cart/{id}")]
-        public async Task<ActionResult<IEnumerable<CartVO>>> RemoveCart(int id)
+        public async Task<ActionResult<CartVO>> RemoveCart(int id)
         {
             var status = await _cartRepository.RemoveFromCart(id);
             if (!status) return NotFound();
@@ -63,7 +63,7 @@ namespace GeekShopping.CartAPI.Controllers
         }
 
         [HttpPost("apply-coupon")]
-        public async Task<ActionResult<IEnumerable<CartVO>>> ApplyCoupon(CartVO vo)
+        public async Task<ActionResult<CartVO>> ApplyCoupon(CartVO vo)
         {
             var status = await _cartRepository.ApplyCoupom(vo.CartHeader.UserId, vo.CartHeader.CouponCode);
             if (!status) return NotFound();
@@ -72,7 +72,7 @@ namespace GeekShopping.CartAPI.Controllers
         }
 
         [HttpDelete("remove-coupon/{userId}")]
-        public async Task<ActionResult<IEnumerable<CartVO>>> RemoveCoupon(string userId)
+        public async Task<ActionResult<CartVO>> RemoveCoupon(string userId)
         {
             var status = await _cartRepository.RemoveCoupom(userId);
             if (!status) return NotFound();

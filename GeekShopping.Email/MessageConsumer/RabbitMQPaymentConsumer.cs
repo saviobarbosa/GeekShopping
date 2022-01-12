@@ -1,6 +1,5 @@
-﻿using GeekShopping.PaymentAPI.Messages;
-using GeekShopping.PaymentAPI.RabbitMQSender;
-using GeekShopping.PaymentProcessor;
+﻿using GeekShopping.Email.Messages;
+using GeekShopping.Email.Repository;
 using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -10,19 +9,19 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace GeekShopping.PaymentAPI.MessageConsumer
+namespace GeekShopping.Email.MessageConsumer
 {
     public class RabbitMQPaymentConsumer : BackgroundService
     {
+        private readonly EmailRepository _repository;
         private IConnection _connection;
         private IModel _channel;
-        private IRabbitMQMessageSender _rabbitMQMessageSender;
-        private readonly IProcessPayment _processPayment;
+        private const string EXCHANGE_NAME = "FanoutPaymentUpdateExchange";
+        private string queueName = "";
 
-        public RabbitMQPaymentConsumer(IProcessPayment processPayment, IRabbitMQMessageSender rabbitMQMessageSender)
+        public RabbitMQPaymentConsumer(EmailRepository repository)
         {
-            _processPayment = processPayment;
-            _rabbitMQMessageSender = rabbitMQMessageSender;
+            _repository = repository;
 
             var factory = new ConnectionFactory
             {
@@ -35,7 +34,10 @@ namespace GeekShopping.PaymentAPI.MessageConsumer
             _connection = factory.CreateConnection();
 
             _channel = _connection.CreateModel();
-            _channel.QueueDeclare(queue: "orderpaymentprocessqueue", false, false, false, arguments: null);
+            _channel.ExchangeDeclare(EXCHANGE_NAME, ExchangeType.Fanout);
+
+            queueName = _channel.QueueDeclare().QueueName;
+            _channel.QueueBind(queueName, EXCHANGE_NAME, "");
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -45,29 +47,20 @@ namespace GeekShopping.PaymentAPI.MessageConsumer
             consumer.Received += (chanel, evt) =>
             {
                 var content = Encoding.UTF8.GetString(evt.Body.ToArray());
-                PaymentMessage vo = JsonSerializer.Deserialize<PaymentMessage>(content);
-                ProcessPayment(vo).GetAwaiter().GetResult();
+                UpdatePaymentResultMessage message = JsonSerializer.Deserialize<UpdatePaymentResultMessage>(content);
+                ProcessLogs(message).GetAwaiter().GetResult();
                 _channel.BasicAck(evt.DeliveryTag, false);
             };
-            _channel.BasicConsume("orderpaymentprocessqueue", false, consumer);
+            _channel.BasicConsume(queueName, false, consumer);
 
             return Task.CompletedTask;
         }
 
-        private async Task ProcessPayment(PaymentMessage vo)
+        private async Task ProcessLogs(UpdatePaymentResultMessage message)
         {
-            var result = _processPayment.PaymentProcessor();
-
-            UpdatePaymentResultMessage paymentResult = new()
-            {
-                Status = result,
-                OrderId = vo.OrderId,
-                Email = vo.Email
-            };
-
             try
             {
-                _rabbitMQMessageSender.SendMessage(paymentResult);   
+                await _repository.LogEmail(message);
             }
             catch (Exception)
             {

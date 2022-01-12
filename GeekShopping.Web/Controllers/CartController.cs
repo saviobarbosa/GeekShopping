@@ -40,7 +40,7 @@ namespace GeekShopping.Web.Controllers
             return View();
         }
 
-        [HttpDelete]
+        [HttpPost]
         [ActionName("RemoveCoupon")]
         public async Task<IActionResult> RemoveCoupon()
         {
