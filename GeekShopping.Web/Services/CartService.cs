@@ -61,7 +61,7 @@ namespace GeekShopping.Web.Services
         {
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var response = await _client.PostAsJson($"{BasePath}/apply-coupon/", model);
+            var response = await _client.PostAsJson($"{BasePath}/apply-coupon", model);
             if (response.IsSuccessStatusCode)
                 return await response.ReadContentAs<bool>();
             else throw new Exception("Something went wrong when calling API");
